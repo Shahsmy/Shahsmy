@@ -93,4 +93,35 @@ function getCurrentUser() {
     $auth = new Auth();
     return $auth->getCurrentUser();
 }
+
+// تابع نمایش تاریخ شمسی
+function jalaliDate($date, $showTime = false) {
+    if (!$date) return '';
+    
+    // شبیه‌سازی تبدیل تاریخ میلادی به شمسی
+    $timestamp = strtotime($date);
+    $gregorianDate = date('Y-m-d', $timestamp);
+    
+    if ($showTime) {
+        return $gregorianDate . ' ' . date('H:i', $timestamp);
+    }
+    
+    return $gregorianDate;
+}
+
+// تابع نمایش حجم فایل
+function formatBytes($bytes, $precision = 2) {
+    $units = array('B', 'KB', 'MB', 'GB', 'TB');
+    
+    for ($i = 0; $bytes > 1024; $i++) {
+        $bytes /= 1024;
+    }
+    
+    return round($bytes, $precision) . ' ' . $units[$i];
+}
+
+// تابع نمایش اعداد فارسی
+function formatNumber($number, $decimals = 0) {
+    return number_format($number, $decimals, '.', ',');
+}
 ?>

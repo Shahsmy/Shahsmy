@@ -248,6 +248,83 @@ CREATE TABLE system_settings (
     FOREIGN KEY (updated_by) REFERENCES users(id)
 );
 
+-- جدول خرید ارز
+CREATE TABLE currency_purchases (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    purchase_date DATE NOT NULL,
+    purchase_time TIME,
+    supplier_id INT,
+    currency_from_id INT NOT NULL,
+    currency_to_id INT NOT NULL,
+    amount_from DECIMAL(15,4) NOT NULL,
+    amount_to DECIMAL(15,4) NOT NULL,
+    exchange_rate DECIMAL(15,8) NOT NULL,
+    commission DECIMAL(15,2) DEFAULT 0,
+    total_paid DECIMAL(15,2) NOT NULL,
+    payment_method ENUM('cash', 'bank_transfer', 'card') NOT NULL,
+    bank_account_id INT,
+    cash_box_id INT,
+    notes TEXT,
+    status ENUM('pending', 'completed', 'cancelled') DEFAULT 'pending',
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_purchase_date (purchase_date),
+    INDEX idx_supplier (supplier_id),
+    INDEX idx_currency_pair (currency_from_id, currency_to_id),
+    FOREIGN KEY (supplier_id) REFERENCES contacts(id),
+    FOREIGN KEY (currency_from_id) REFERENCES currencies(id),
+    FOREIGN KEY (currency_to_id) REFERENCES currencies(id),
+    FOREIGN KEY (bank_account_id) REFERENCES bank_accounts(id),
+    FOREIGN KEY (cash_box_id) REFERENCES cash_boxes(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+-- جدول بارگذاری فایل‌های اکسل
+CREATE TABLE excel_uploads (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    file_name VARCHAR(255) NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_size INT NOT NULL,
+    upload_type ENUM('deposits_withdrawals', 'deposits_only', 'withdrawals_only') NOT NULL,
+    bank_account_id INT,
+    upload_date DATE NOT NULL,
+    status ENUM('pending', 'processing', 'processed', 'error') DEFAULT 'pending',
+    processed_at TIMESTAMP NULL,
+    total_records INT DEFAULT 0,
+    success_records INT DEFAULT 0,
+    error_records INT DEFAULT 0,
+    uploaded_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (bank_account_id) REFERENCES bank_accounts(id),
+    FOREIGN KEY (uploaded_by) REFERENCES users(id)
+);
+
+-- جدول تخصیص برداشت‌ها
+CREATE TABLE withdrawal_allocations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    contact_id INT NOT NULL,
+    withdrawal_id INT NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    description TEXT,
+    allocated_by INT NOT NULL,
+    allocated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (contact_id) REFERENCES contacts(id),
+    FOREIGN KEY (withdrawal_id) REFERENCES withdrawals(id),
+    FOREIGN KEY (allocated_by) REFERENCES users(id)
+);
+
+-- جدول تنظیمات سیستم
+CREATE TABLE system_settings (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    setting_key VARCHAR(100) UNIQUE NOT NULL,
+    setting_value TEXT,
+    description VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- درج داده‌های اولیه
 INSERT INTO currencies (currency_code, currency_name, symbol, decimal_places, is_base) VALUES
 ('IRR', 'ریال ایران', '﷼', 0, TRUE),

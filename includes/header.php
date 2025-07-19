@@ -47,7 +47,7 @@ $currentUser = getCurrentUser();
                 </li>
                 <?php endif; ?>
                 
-                <?php if (checkPermission('banks')): ?>
+                <?php if (checkPermission('manage_banks')): ?>
                 <li>
                     <a href="banks.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'banks.php' ? 'active' : ''; ?>">
                         <i class="fas fa-university"></i>
@@ -56,7 +56,7 @@ $currentUser = getCurrentUser();
                 </li>
                 <?php endif; ?>
                 
-                <?php if (checkPermission('currencies')): ?>
+                <?php if (checkPermission('manage_currencies')): ?>
                 <li>
                     <a href="currencies.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'currencies.php' ? 'active' : ''; ?>">
                         <i class="fas fa-coins"></i>
@@ -65,7 +65,7 @@ $currentUser = getCurrentUser();
                 </li>
                 <?php endif; ?>
                 
-                <?php if (checkPermission('cash_boxes')): ?>
+                <?php if (checkPermission('manage_cash_boxes')): ?>
                 <li>
                     <a href="cash_boxes.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'cash_boxes.php' ? 'active' : ''; ?>">
                         <i class="fas fa-cash-register"></i>
@@ -74,7 +74,7 @@ $currentUser = getCurrentUser();
                 </li>
                 <?php endif; ?>
                 
-                <?php if (checkPermission('contacts')): ?>
+                <?php if (checkPermission('manage_contacts')): ?>
                 <li>
                     <a href="contacts.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'contacts.php' ? 'active' : ''; ?>">
                         <i class="fas fa-address-book"></i>
@@ -83,16 +83,7 @@ $currentUser = getCurrentUser();
                 </li>
                 <?php endif; ?>
                 
-                <?php if (checkPermission('accounts_overview')): ?>
-                <li>
-                    <a href="accounts_overview.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'accounts_overview.php' ? 'active' : ''; ?>">
-                        <i class="fas fa-chart-line"></i>
-                        <span>مرور حساب‌ها</span>
-                    </a>
-                </li>
-                <?php endif; ?>
-                
-                <?php if (checkPermission('excel_upload')): ?>
+                <?php if (checkPermission('manage_transactions')): ?>
                 <li>
                     <a href="excel_upload.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'excel_upload.php' ? 'active' : ''; ?>">
                         <i class="fas fa-file-excel"></i>
@@ -101,7 +92,7 @@ $currentUser = getCurrentUser();
                 </li>
                 <?php endif; ?>
                 
-                <?php if (checkPermission('currency_sales')): ?>
+                <?php if (checkPermission('manage_transactions')): ?>
                 <li>
                     <a href="currency_sales.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'currency_sales.php' ? 'active' : ''; ?>">
                         <i class="fas fa-chart-area"></i>
@@ -110,25 +101,34 @@ $currentUser = getCurrentUser();
                 </li>
                 <?php endif; ?>
                 
-                <?php if (checkPermission('deposit_allocation')): ?>
+                <?php if (checkPermission('manage_transactions')): ?>
                 <li>
                     <a href="deposit_allocation.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'deposit_allocation.php' ? 'active' : ''; ?>">
                         <i class="fas fa-link"></i>
-                        <span>تطبیق واریزی‌ها</span>
+                        <span>تخصیص واریز</span>
                     </a>
                 </li>
                 <?php endif; ?>
                 
-                <?php if (checkPermission('withdrawal_allocation')): ?>
+                <?php if (checkPermission('manage_transactions')): ?>
                 <li>
                     <a href="withdrawal_allocation.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'withdrawal_allocation.php' ? 'active' : ''; ?>">
                         <i class="fas fa-unlink"></i>
-                        <span>تطبیق برداشت‌ها</span>
+                        <span>تخصیص برداشت</span>
                     </a>
                 </li>
                 <?php endif; ?>
                 
-                <?php if (checkPermission('contacts_summary')): ?>
+                <?php if (checkPermission('view_reports')): ?>
+                <li>
+                    <a href="contact_transactions.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'contact_transactions.php' ? 'active' : ''; ?>">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>تراکنش‌های مخاطبین</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+                
+                <?php if (checkPermission('view_reports')): ?>
                 <li>
                     <a href="contacts_summary.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'contacts_summary.php' ? 'active' : ''; ?>">
                         <i class="fas fa-balance-scale"></i>
@@ -137,7 +137,7 @@ $currentUser = getCurrentUser();
                 </li>
                 <?php endif; ?>
                 
-                <?php if (checkPermission('profit_loss')): ?>
+                <?php if (checkPermission('view_reports')): ?>
                 <li>
                     <a href="profit_loss.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'profit_loss.php' ? 'active' : ''; ?>">
                         <i class="fas fa-chart-pie"></i>
@@ -146,16 +146,7 @@ $currentUser = getCurrentUser();
                 </li>
                 <?php endif; ?>
                 
-                <?php if (checkPermission('reports')): ?>
-                <li>
-                    <a href="reports.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'reports.php' ? 'active' : ''; ?>">
-                        <i class="fas fa-file-alt"></i>
-                        <span>گزارشات</span>
-                    </a>
-                </li>
-                <?php endif; ?>
-                
-                <?php if (checkPermission('settings') || $currentUser['role'] === 'admin'): ?>
+                <?php if (checkPermission('manage_settings') || $currentUser['role'] === 'admin'): ?>
                 <li>
                     <a href="settings.php" class="<?php echo basename($_SERVER['PHP_SELF']) === 'settings.php' ? 'active' : ''; ?>">
                         <i class="fas fa-cog"></i>
