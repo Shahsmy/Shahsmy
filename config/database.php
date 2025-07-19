@@ -87,22 +87,4 @@ class Database {
     }
 }
 
-// فانکشن کمکی برای فرمت کردن اعداد
-function formatNumber($number, $decimals = 0) {
-    return number_format($number, $decimals, '.', ',');
-}
-
-// فانکشن کمکی برای فرمت کردن تاریخ
-function formatDate($date) {
-    if ($date) {
-        return date('Y/m/d', strtotime($date));
-    }
-    return '';
-}
-
-// فانکشن کمکی برای تبدیل تاریخ شمسی
-function jalaliDate($date) {
-    // اینجا می‌توانید کتابخانه تبدیل تاریخ شمسی استفاده کنید
-    return formatDate($date);
-}
 ?>

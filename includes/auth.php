@@ -132,4 +132,31 @@ function formatBytes($bytes, $precision = 2) {
 function formatNumber($number, $decimals = 0) {
     return number_format($number, $decimals, '.', ',');
 }
+
+// تابع فرمت کردن تاریخ ساده
+function formatDate($date) {
+    if ($date) {
+        return date('Y/m/d', strtotime($date));
+    }
+    return '';
+}
+
+// تابع فرمت تاریخ شمسی (شبیه‌ساز)
+function formatJalaliDate($date) {
+    if (!$date) return '';
+    
+    // شبیه‌ساز ساده تاریخ شمسی
+    $timestamp = strtotime($date);
+    return date('Y/m/d', $timestamp) . ' (میلادی)';
+}
+
+// تابع فرمت اندازه فایل
+function formatFileSize($bytes) {
+    $units = ['B', 'KB', 'MB', 'GB'];
+    $bytes = max($bytes, 0);
+    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+    $pow = min($pow, count($units) - 1);
+    $bytes /= (1 << (10 * $pow));
+    return round($bytes, 2) . ' ' . $units[$pow];
+}
 ?>
