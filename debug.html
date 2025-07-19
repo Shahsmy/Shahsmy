@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحه دیباگ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #1d4ed8;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { border-color: #059669; background: #f0fdf4; color: #059669; }
+        .error { border-color: #dc2626; background: #fef2f2; color: #dc2626; }
+        .info { border-color: #2563eb; background: #eff6ff; color: #2563eb; }
+        
+        .login-form {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>صفحه دیباگ سیستم ورود</h1>
+        
+        <div style="margin: 20px 0;">
+            <button class="test-button" onclick="testBasicFetch()">تست اتصال پایه</button>
+            <button class="test-button" onclick="testAPIFiles()">تست فایل‌های API</button>
+            <button class="test-button" onclick="testLoginAPI()">تست API ورود</button>
+            <button class="test-button" onclick="clearResults()">پاک کردن نتایج</button>
+        </div>
+        
+        <div class="login-form">
+            <h3>تست ورود دستی</h3>
+            <div class="form-group">
+                <label>نام کاربری:</label>
+                <input type="text" id="debugUsername" value="admin">
+            </div>
+            <div class="form-group">
+                <label>رمز عبور:</label>
+                <input type="password" id="debugPassword" value="admin123">
+            </div>
+            <button class="test-button" onclick="manualLogin()">ورود دستی</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testBasicFetch() {
+            addResult('شروع تست اتصال پایه...', 'info');
+            
+            try {
+                const response = await fetch('test.php');
+                if (response.ok) {
+                    addResult('✅ اتصال پایه به سرور موفقیت‌آمیز', 'success');
+                } else {
+                    addResult(`❌ خطا در اتصال: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ خطا در اتصال پایه: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAPIFiles() {
+            addResult('شروع تست فایل‌های API...', 'info');
+            
+            const apiFiles = ['api/login.php', 'api/logout.php', 'api/session.php', 'api/users.php'];
+            
+            for (const file of apiFiles) {
+                try {
+                    const response = await fetch(file, { method: 'HEAD' });
+                    if (response.ok || response.status === 405) {
+                        addResult(`✅ فایل ${file} در دسترس است`, 'success');
+                    } else {
+                        addResult(`❌ فایل ${file} در دسترس نیست (${response.status})`, 'error');
+                    }
+                } catch (error) {
+                    addResult(`❌ خطا در دسترسی به ${file}: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function testLoginAPI() {
+            addResult('شروع تست API ورود...', 'info');
+            
+            const loginData = {
+                username: 'admin',
+                password: 'admin123'
+            };
+
+            try {
+                addResult(`درخواست POST به api/login.php با داده: ${JSON.stringify(loginData)}`, 'info');
+                
+                const response = await fetch('api/login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                });
+
+                addResult(`کد پاسخ سرور: ${response.status}`, 'info');
+                addResult(`نوع محتوا: ${response.headers.get('content-type')}`, 'info');
+
+                const responseText = await response.text();
+                addResult(`محتوای پاسخ: ${responseText}`, 'info');
+
+                if (response.ok) {
+                    try {
+                        const jsonData = JSON.parse(responseText);
+                        if (jsonData.success) {
+                            addResult('✅ ورود موفقیت‌آمیز!', 'success');
+                            addResult(`داده‌های کاربر: ${JSON.stringify(jsonData.user)}`, 'success');
+                        } else {
+                            addResult(`❌ ورود ناموفق: ${jsonData.message}`, 'error');
+                        }
+                    } catch (jsonError) {
+                        addResult(`❌ خطا در تجزیه JSON: ${jsonError.message}`, 'error');
+                    }
+                } else {
+                    addResult(`❌ خطای سرور: ${response.status}`, 'error');
+                }
+
+            } catch (error) {
+                addResult(`❌ خطای شبکه: ${error.message}`, 'error');
+            }
+        }
+
+        async function manualLogin() {
+            const username = document.getElementById('debugUsername').value;
+            const password = document.getElementById('debugPassword').value;
+            
+            addResult(`شروع ورود دستی با نام کاربری: ${username}`, 'info');
+            
+            if (!username || !password) {
+                addResult('❌ نام کاربری و رمز عبور الزامی است', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('api/login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const responseText = await response.text();
+                addResult(`پاسخ سرور: ${responseText}`, 'info');
+
+                if (response.ok) {
+                    const data = JSON.parse(responseText);
+                    if (data.success) {
+                        addResult('✅ ورود موفقیت‌آمیز! می‌توانید به dashboard.html بروید', 'success');
+                        
+                        // تست انتقال به داشبرد
+                        setTimeout(() => {
+                            if (confirm('آیا می‌خواهید به داشبرد منتقل شوید؟')) {
+                                window.location.href = 'dashboard.html';
+                            }
+                        }, 2000);
+                    } else {
+                        addResult(`❌ ورود ناموفق: ${data.message}`, 'error');
+                    }
+                } else {
+                    addResult(`❌ خطای سرور: ${response.status}`, 'error');
+                }
+
+            } catch (error) {
+                addResult(`❌ خطا: ${error.message}`, 'error');
+            }
+        }
+
+        // تست خودکار در شروع
+        window.onload = function() {
+            addResult('صفحه دیباگ آماده است', 'info');
+            addResult('برای شروع، روی دکمه‌های بالا کلیک کنید', 'info');
+        };
+    </script>
+</body>
+</html>
