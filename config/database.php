@@ -1,5 +1,27 @@
 <?php
-// تنظیمات اتصال به پایگاه داده
+// تنظیمات پایگاه داده
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'exchange_accounting');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+define('DB_CHARSET', 'utf8mb4');
+
+// تابع اتصال به پایگاه داده
+function getDB() {
+    try {
+        $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
+        $pdo = new PDO($dsn, DB_USER, DB_PASS, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]);
+        return $pdo;
+    } catch (PDOException $e) {
+        die("خطا در اتصال به پایگاه داده: " . $e->getMessage());
+    }
+}
+
+// کلاس ساده پایگاه داده برای سازگاری
 class Database {
     private $host = 'localhost';
     private $dbname = 'exchange_accounting';
@@ -49,18 +71,19 @@ class Database {
     }
     
     public function update($table, $data, $where, $whereParams = []) {
-        $setClause = implode(', ', array_map(function($key) {
-            return "{$key} = :{$key}";
-        }, array_keys($data)));
-        
+        $set = [];
+        foreach ($data as $key => $value) {
+            $set[] = "{$key} = :{$key}";
+        }
+        $setClause = implode(', ', $set);
         $sql = "UPDATE {$table} SET {$setClause} WHERE {$where}";
         $params = array_merge($data, $whereParams);
-        return $this->query($sql, $params);
+        $this->query($sql, $params);
     }
     
     public function delete($table, $where, $params = []) {
         $sql = "DELETE FROM {$table} WHERE {$where}";
-        return $this->query($sql, $params);
+        $this->query($sql, $params);
     }
 }
 

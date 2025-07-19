@@ -1,6 +1,14 @@
 <?php
 session_start();
-require_once '../config/database.php';
+
+// تشخیص مسیر صحیح برای فایل database.php
+if (file_exists(__DIR__ . '/../config/database.php')) {
+    require_once __DIR__ . '/../config/database.php';
+} elseif (file_exists('config/database.php')) {
+    require_once 'config/database.php';
+} else {
+    die('فایل تنظیمات پایگاه داده یافت نشد!');
+}
 
 class Auth {
     private $db;
