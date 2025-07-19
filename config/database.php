@@ -48,6 +48,11 @@ class Database {
         return $this->pdo;
     }
     
+    // متد prepare برای سازگاری
+    public function prepare($sql) {
+        return $this->connect()->prepare($sql);
+    }
+    
     public function query($sql, $params = []) {
         $stmt = $this->connect()->prepare($sql);
         $stmt->execute($params);
@@ -84,6 +89,23 @@ class Database {
     public function delete($table, $where, $params = []) {
         $sql = "DELETE FROM {$table} WHERE {$where}";
         $this->query($sql, $params);
+    }
+    
+    // متدهای اضافی برای سازگاری کامل
+    public function lastInsertId() {
+        return $this->connect()->lastInsertId();
+    }
+    
+    public function beginTransaction() {
+        return $this->connect()->beginTransaction();
+    }
+    
+    public function commit() {
+        return $this->connect()->commit();
+    }
+    
+    public function rollback() {
+        return $this->connect()->rollback();
     }
 }
 
