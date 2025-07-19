@@ -1,5 +1,7 @@
 // Login page functionality
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Login page loaded'); // دیباگ
+    
     // Check if already logged in
     checkExistingSession();
     
@@ -7,6 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
+        console.log('Login form event listener added'); // دیباگ
+    } else {
+        console.error('Login form not found!');
     }
     
     // Setup remember me checkbox
@@ -15,29 +20,41 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup enter key handling
     document.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
-            handleLogin(e);
+            const form = document.getElementById('loginForm');
+            if (form && document.activeElement && form.contains(document.activeElement)) {
+                handleLogin(e);
+            }
         }
     });
+    
+    // Setup input validation
+    setupInputValidation();
 });
 
 async function checkExistingSession() {
     try {
+        console.log('Checking existing session...'); // دیباگ
         const isValid = await auth.checkSession();
         if (isValid) {
-            // Redirect to dashboard
+            console.log('Valid session found, redirecting to dashboard'); // دیباگ
             window.location.href = 'dashboard.html';
+        } else {
+            console.log('No valid session found'); // دیباگ
         }
     } catch (error) {
-        console.log('No existing session');
+        console.log('No existing session:', error);
     }
 }
 
 async function handleLogin(e) {
     e.preventDefault();
+    console.log('Login form submitted'); // دیباگ
     
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value;
-    const remember = document.getElementById('remember').checked;
+    const username = document.getElementById('username')?.value?.trim();
+    const password = document.getElementById('password')?.value;
+    const remember = document.getElementById('remember')?.checked;
+    
+    console.log('Login data:', { username, password: password ? '[PROVIDED]' : '[EMPTY]', remember }); // دیباگ
     
     // Validate inputs
     if (!username || !password) {
@@ -49,9 +66,11 @@ async function handleLogin(e) {
     setLoginLoading(true);
     
     try {
+        console.log('Attempting login...'); // دیباگ
         const result = await auth.login(username, password);
+        console.log('Login result:', result); // دیباگ
         
-        if (result.success) {
+        if (result && result.success) {
             // Handle remember me
             if (remember) {
                 localStorage.setItem('rememberedUsername', username);
@@ -67,13 +86,13 @@ async function handleLogin(e) {
             }, 1000);
             
         } else {
-            showError(result.message || 'خطا در ورود به سیستم');
-            // Shake form on error
+            const errorMessage = result?.message || 'خطا در ورود به سیستم';
+            showError(errorMessage);
             shakeForm();
         }
     } catch (error) {
         console.error('Login error:', error);
-        showError('خطا در ارتباط با سرور');
+        showError(error.message || 'خطا در ارتباط با سرور');
         shakeForm();
     } finally {
         setLoginLoading(false);
@@ -84,42 +103,104 @@ function setLoginLoading(loading) {
     const loginBtn = document.getElementById('loginBtn');
     const loadingOverlay = document.getElementById('loadingOverlay');
     
-    if (loading) {
-        loginBtn.disabled = true;
-        loginBtn.classList.add('loading');
-        loginBtn.innerHTML = '<div class="spinner"></div> در حال ورود...';
-        
-        if (loadingOverlay) {
-            loadingOverlay.style.display = 'flex';
+    if (loginBtn) {
+        if (loading) {
+            loginBtn.disabled = true;
+            loginBtn.classList.add('loading');
+            loginBtn.innerHTML = '<div class="spinner"></div> در حال ورود...';
+        } else {
+            loginBtn.disabled = false;
+            loginBtn.classList.remove('loading');
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> ورود';
         }
-    } else {
-        loginBtn.disabled = false;
-        loginBtn.classList.remove('loading');
-        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> ورود';
-        
-        if (loadingOverlay) {
-            loadingOverlay.style.display = 'none';
-        }
+    }
+    
+    if (loadingOverlay) {
+        loadingOverlay.style.display = loading ? 'flex' : 'none';
     }
 }
 
 function showError(message) {
+    console.log('Showing error:', message); // دیباگ
     hideAllMessages();
+    
+    // Use the global UI function first
+    if (window.ui && window.ui.showError) {
+        ui.showError(message);
+        return;
+    }
+    
+    // Fallback to local error display
     const errorDiv = document.getElementById('errorMessage');
     if (errorDiv) {
         errorDiv.textContent = message;
         errorDiv.style.display = 'block';
         errorDiv.classList.add('fade-in');
+    } else {
+        // Create temporary error message
+        const tempError = document.createElement('div');
+        tempError.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+            padding: 1rem;
+            border-radius: 8px;
+            z-index: 10000;
+            max-width: 400px;
+        `;
+        tempError.textContent = message;
+        document.body.appendChild(tempError);
+        
+        setTimeout(() => {
+            if (tempError.parentNode) {
+                tempError.remove();
+            }
+        }, 5000);
     }
 }
 
 function showSuccess(message) {
+    console.log('Showing success:', message); // دیباگ
     hideAllMessages();
+    
+    // Use the global UI function first
+    if (window.ui && window.ui.showSuccess) {
+        ui.showSuccess(message);
+        return;
+    }
+    
+    // Fallback to local success display
     const successDiv = document.getElementById('successMessage');
     if (successDiv) {
         successDiv.textContent = message;
         successDiv.style.display = 'block';
         successDiv.classList.add('fade-in');
+    } else {
+        // Create temporary success message
+        const tempSuccess = document.createElement('div');
+        tempSuccess.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #f0fdf4;
+            color: #059669;
+            border: 1px solid #bbf7d0;
+            padding: 1rem;
+            border-radius: 8px;
+            z-index: 10000;
+            max-width: 400px;
+        `;
+        tempSuccess.textContent = message;
+        document.body.appendChild(tempSuccess);
+        
+        setTimeout(() => {
+            if (tempSuccess.parentNode) {
+                tempSuccess.remove();
+            }
+        }, 3000);
     }
 }
 
@@ -189,10 +270,10 @@ function togglePassword() {
         
         if (passwordField.type === 'password') {
             passwordField.type = 'text';
-            icon.className = 'fas fa-eye-slash';
+            if (icon) icon.className = 'fas fa-eye-slash';
         } else {
             passwordField.type = 'password';
-            icon.className = 'fas fa-eye';
+            if (icon) icon.className = 'fas fa-eye';
         }
     }
 }
@@ -215,6 +296,8 @@ function setupInputValidation() {
 
 function validateUsername() {
     const usernameField = document.getElementById('username');
+    if (!usernameField) return true;
+    
     const value = usernameField.value.trim();
     
     if (!value) {
@@ -233,6 +316,8 @@ function validateUsername() {
 
 function validatePassword() {
     const passwordField = document.getElementById('password');
+    if (!passwordField) return true;
+    
     const value = passwordField.value;
     
     if (!value) {
@@ -288,13 +373,15 @@ function clearFieldError(field) {
     }
 }
 
-// Initialize input validation when DOM loads
-document.addEventListener('DOMContentLoaded', setupInputValidation);
-
 // Demo credentials auto-fill (for development)
 function fillDemoCredentials() {
-    document.getElementById('username').value = 'admin';
-    document.getElementById('password').value = 'admin123';
+    const usernameField = document.getElementById('username');
+    const passwordField = document.getElementById('password');
+    
+    if (usernameField) usernameField.value = 'admin';
+    if (passwordField) passwordField.value = 'admin123';
+    
+    console.log('Demo credentials filled'); // دیباگ
 }
 
 // Add click handler for demo credentials
@@ -319,3 +406,17 @@ window.addEventListener('pageshow', function(event) {
 if (window.history.replaceState) {
     window.history.replaceState(null, null, window.location.href);
 }
+
+// Test function for debugging login
+window.testLogin = function() {
+    console.log('Testing login with demo credentials...');
+    fillDemoCredentials();
+    
+    setTimeout(() => {
+        const form = document.getElementById('loginForm');
+        if (form) {
+            const event = new Event('submit', { cancelable: true });
+            form.dispatchEvent(event);
+        }
+    }, 1000);
+};

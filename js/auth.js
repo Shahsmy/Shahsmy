@@ -1,5 +1,6 @@
 // Authentication and API handling module
-const API_BASE = 'api/';
+// تشخیص مسیر API بر اساس محیط
+const API_BASE = window.location.pathname.includes('/') ? 'api/' : 'api/';
 
 // API utility functions
 const api = {
@@ -13,23 +14,45 @@ const api = {
             ...options
         };
 
+        console.log('API Request:', url, config); // برای دیباگ
+
         try {
             const response = await fetch(url, config);
+            
+            console.log('API Response Status:', response.status); // برای دیباگ
             
             if (!response.ok) {
                 if (response.status === 401) {
                     // Session expired, redirect to login
-                    if (window.location.pathname !== '/login.html') {
+                    if (!window.location.pathname.includes('login.html')) {
                         window.location.href = 'login.html';
                     }
                     return null;
                 }
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                
+                // سعی کنیم متن خطا را بخوانیم
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
             }
             
-            return await response.json();
+            const result = await response.json();
+            console.log('API Response Data:', result); // برای دیباگ
+            return result;
+            
         } catch (error) {
             console.error('API Request Error:', error);
+            
+            // اگر خطای شبکه است
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                throw new Error('خطا در ارتباط با سرور - لطفاً اتصال اینترنت خود را بررسی کنید');
+            }
+            
+            // اگر خطای JSON parse است
+            if (error.name === 'SyntaxError') {
+                throw new Error('پاسخ سرور نامعتبر است - احتمالاً خطای PHP');
+            }
+            
             throw error;
         }
     },
@@ -68,10 +91,14 @@ const auth = {
 
     async login(username, password) {
         try {
+            console.log('Attempting login for:', username); // برای دیباگ
+            
             const response = await api.post('login.php', {
                 username: username,
                 password: password
             });
+
+            console.log('Login response:', response); // برای دیباگ
 
             if (response && response.success) {
                 this.currentUser = response.user;
@@ -84,10 +111,10 @@ const auth = {
                 return response;
             }
             
-            return response;
+            return response || { success: false, message: 'پاسخ نامعتبر از سرور' };
         } catch (error) {
             console.error('Login error:', error);
-            return { success: false, message: 'خطا در ارتباط با سرور' };
+            return { success: false, message: error.message || 'خطا در ارتباط با سرور' };
         }
     },
 
@@ -126,6 +153,11 @@ const auth = {
 
     hasPermission(permission) {
         if (!this.currentUser || !this.currentUser.permissions) {
+            const storedPermissions = localStorage.getItem('userPermissions');
+            if (storedPermissions) {
+                const permissions = JSON.parse(storedPermissions);
+                return permissions.includes(permission);
+            }
             return false;
         }
         return this.currentUser.permissions.includes(permission);
@@ -138,11 +170,13 @@ const auth = {
     },
 
     isAdmin() {
-        return this.currentUser && this.currentUser.role === 'admin';
+        const role = this.currentUser?.role || localStorage.getItem('userRole');
+        return role === 'admin';
     },
 
     isManager() {
-        return this.currentUser && ['admin', 'manager'].includes(this.currentUser.role);
+        const role = this.currentUser?.role || localStorage.getItem('userRole');
+        return ['admin', 'manager'].includes(role);
     }
 };
 
@@ -164,15 +198,50 @@ const ui = {
         const messageEl = document.createElement('div');
         messageEl.className = `message ${type}-message fade-in`;
         messageEl.textContent = message;
+        messageEl.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            z-index: 10000;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-width: 400px;
+        `;
 
-        // Insert at the top of the page
-        const container = document.querySelector('.page-content') || document.body;
-        container.insertBefore(messageEl, container.firstChild);
+        // Set colors based on type
+        switch(type) {
+            case 'error':
+                messageEl.style.backgroundColor = '#fef2f2';
+                messageEl.style.color = '#dc2626';
+                messageEl.style.border = '1px solid #fecaca';
+                break;
+            case 'success':
+                messageEl.style.backgroundColor = '#f0fdf4';
+                messageEl.style.color = '#059669';
+                messageEl.style.border = '1px solid #bbf7d0';
+                break;
+            case 'warning':
+                messageEl.style.backgroundColor = '#fffbeb';
+                messageEl.style.color = '#d97706';
+                messageEl.style.border = '1px solid #fed7aa';
+                break;
+            default:
+                messageEl.style.backgroundColor = '#eff6ff';
+                messageEl.style.color = '#2563eb';
+                messageEl.style.border = '1px solid #bfdbfe';
+        }
+
+        // Insert into body
+        document.body.appendChild(messageEl);
 
         // Auto remove after duration
         if (duration > 0) {
             setTimeout(() => {
-                messageEl.remove();
+                if (messageEl.parentNode) {
+                    messageEl.remove();
+                }
             }, duration);
         }
 
@@ -189,6 +258,10 @@ const ui = {
 
     showWarning(message, duration = 6000) {
         return this.showMessage(message, 'warning', duration);
+    },
+
+    showInfo(message, duration = 5000) {
+        return this.showMessage(message, 'info', duration);
     },
 
     formatDateTime(timestamp) {
@@ -305,6 +378,18 @@ window.addEventListener('unhandledrejection', function(event) {
     console.error('Unhandled promise rejection:', event.reason);
     ui.showError('خطای غیرمنتظره‌ای رخ داده است');
 });
+
+// Test function for debugging
+window.testAPI = async function() {
+    console.log('Testing API connection...');
+    try {
+        const response = await fetch('test.php');
+        const text = await response.text();
+        console.log('Test response:', text);
+    } catch (error) {
+        console.error('Test failed:', error);
+    }
+};
 
 // Export for global access
 window.api = api;
