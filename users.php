@@ -1,9 +1,11 @@
 <?php
-$pageTitle = 'مدیریت کاربران';
-require_once 'includes/header.php';
+require_once 'includes/auth.php';
 
 // بررسی دسترسی
-requirePermission('users');
+if (!checkPermission('users') && $_SESSION['role'] !== 'admin') {
+    header('Location: dashboard.php?error=access_denied');
+    exit;
+}
 
 // تعریف لیست دسترسی‌ها
 $availablePermissions = [
@@ -131,6 +133,9 @@ $users = $db->fetchAll("
     SELECT * FROM users 
     ORDER BY created_at DESC
 ");
+
+$page_title = 'مدیریت کاربران';
+include 'includes/header.php';
 ?>
 
 <div class="card">
@@ -462,4 +467,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php include 'includes/footer.php'; ?>
