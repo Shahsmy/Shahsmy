@@ -1,5 +1,6 @@
 <?php
 require_once 'includes/auth.php';
+require_once 'config/database.php';
 
 // بررسی ورود کاربر
 if (!isset($_SESSION['user_id'])) {
@@ -7,8 +8,8 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-// دریافت اطلاعات کاربر
-$db = getDB();
+// ایجاد نمونه Database و دریافت اطلاعات کاربر
+$db = new Database();
 $user = getCurrentUser();
 
 $page_title = 'داشبورد';

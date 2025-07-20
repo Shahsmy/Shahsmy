@@ -1,5 +1,9 @@
 <?php
 require_once 'includes/auth.php';
+require_once 'config/database.php';
+
+// ایجاد نمونه Database
+$db = new Database();
 
 // بررسی دسترسی
 if (!checkPermission('users') && $_SESSION['role'] !== 'admin') {
